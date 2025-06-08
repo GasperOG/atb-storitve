@@ -1,18 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { checkIfAvailable } from "@/lib/rentals";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-
-type Kovcek = { id: string; name: string; description: string };
-type Rental = {
-  id: string;
-  customer: string;
-  itemId: string;
-  startDate: string;
-  endDate: string;
-};
+import { Rental, Kovcek } from "@/lib/types";
+import { checkIfAvailable } from "@/lib/rentals";
 
 type Props = {
   kovcki: Kovcek[];
@@ -73,10 +65,14 @@ export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
 
   const result = await checkIfAvailable(formData.itemId, formData.startDate, formData.endDate);
   if (result.zaseden) {
-    const { najem } = result;
-    setModalData({ endDate: najem.endDate, customer: najem.customer });
-    return;
-  }
+  const { najem } = result;
+  setModalData({
+    endDate: najem?.endDate || "",
+    customer: najem?.customer || "Nepoznano",
+  });
+  return;
+}
+
 
   // 👉 Izračunaj naslednji ID
   const maxId = rentals.reduce((max, r) => {
@@ -98,7 +94,7 @@ export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
 
   // 🧹 Počisti
   setSuccessModal(true);
-  setFormData({ customer: "", itemId: "", startDate: "", endDate: "" });
+  setFormData({ id: "", customer: "", itemId: "", startDate: "", endDate: "" });
   setAvailableKovcki([]);
 };
 

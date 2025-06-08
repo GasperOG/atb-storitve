@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import SearchRentals from "/components/admin/SearchRentals";
+import SearchRentals from "../components/admin/SearchRentals";
 
 export default function Home() {
   const [availableSuitcases, setAvailableSuitcases] = useState<string[] | null>(null);

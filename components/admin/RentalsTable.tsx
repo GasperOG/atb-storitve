@@ -1,27 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-
-interface Rental {
-  id: string; // dodano: unikatna ID številka za vsak najem
-  customer: string;
-  itemId: string;
-  startDate: string;
-  endDate: string;
-}
-
-interface Kovcek {
-  id: string;
-  name: string;
-  desc: string;
-}
+import { Rental, Kovcek } from "@/lib/types";
 
 interface RentalsTableProps {
   rentals: Rental[];
   kovcki: Kovcek[];
 }
 
-export default function RentalsTable({ rentals, kovcki, onAddRental }: RentalsTableProps) {
+export default function RentalsTable({ rentals, kovcki}: RentalsTableProps) {
   const [sortBy, setSortBy] = useState<"startDate" | "endDate">("startDate");
   const [selectedKovcekId, setSelectedKovcekId] = useState<string | null>(null);
 
