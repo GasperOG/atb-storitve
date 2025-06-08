@@ -19,7 +19,6 @@ interface Kovcek {
 interface RentalsTableProps {
   rentals: Rental[];
   kovcki: Kovcek[];
-  onAddRental: (newRental: Rental) => void;
 }
 
 export default function RentalsTable({ rentals, kovcki, onAddRental }: RentalsTableProps) {

@@ -7,7 +7,7 @@ export default function Home() {
   const [availableSuitcases, setAvailableSuitcases] = useState<string[] | null>(null);
 
   // Tu kasneje dodamo funkcijo, ki bo poizvedovala Firebase in nastavljala rezultate
-  const handleSearch = (_startDate: string, _endDate: string) => {
+  const handleSearch = () => {
     // Za test bo zaenkrat samo placeholder
     setAvailableSuitcases([
       "Kovček A",
