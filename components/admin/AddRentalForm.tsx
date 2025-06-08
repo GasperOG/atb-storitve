@@ -6,7 +6,14 @@ import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 type Kovcek = { id: string; name: string; description: string };
-type Rental = { customer: string; itemId: string; startDate: string; endDate: string };
+type Rental = {
+  id: string;
+  customer: string;
+  itemId: string;
+  startDate: string;
+  endDate: string;
+};
+
 type Props = {
   kovcki: Kovcek[];
   rentals: Rental[];
@@ -15,6 +22,7 @@ type Props = {
 
 export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
   const [formData, setFormData] = useState<Rental>({
+    id: "",
     customer: "",
     itemId: "",
     startDate: "",
@@ -72,7 +80,7 @@ export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
 
   // 👉 Izračunaj naslednji ID
   const maxId = rentals.reduce((max, r) => {
-    const idNum = parseInt((r as any).id || "0");
+    const idNum = parseInt(r.id || "0");
     return !isNaN(idNum) && idNum > max ? idNum : max;
   }, 0);
   const newId = (maxId + 1).toString();
