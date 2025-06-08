@@ -1,4 +1,5 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAfINjEAXqUzopBMyflwhcnTA_ieCfQLNw",
@@ -10,4 +11,8 @@ const firebaseConfig = {
   measurementId: "G-BPKDW6FJYG"
 };
 
-export const app = initializeApp(firebaseConfig);
+// Preprečimo ponovno inicializacijo, če je app že naložen
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+
+// Eksportiramo bazo, da jo lahko uporabljamo drugje
+export const db = getFirestore(app);
