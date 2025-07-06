@@ -365,7 +365,7 @@ export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
 
       {/* Modal za uspešno dodan najem */}
       {successModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4">
+        <div className="fixed inset-0 backdrop-blur-lg bg-opacity-40 flex items-center justify-center p-4">
           <div className="bg-white p-6 rounded-xl max-w-sm shadow-lg text-center">
             <h3 className="text-xl font-semibold mb-4 text-green-700">Uspešno dodan najem!</h3>
             <button
