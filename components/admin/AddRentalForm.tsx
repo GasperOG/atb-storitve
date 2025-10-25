@@ -5,7 +5,6 @@ import { setDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Rental, Kovcek } from "@/lib/types";
 import { checkIfAvailable } from "@/lib/rentals";
-import { useRouter } from "next/navigation";
 
 type Props = {
   kovcki: Kovcek[]; // že filtrirani kovčki glede na datum
