@@ -11,7 +11,6 @@ export default function DodajNajemPage() {
   const [kovcki, setKovcki] = useState<Kovcek[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [loadingKovcki, setLoadingKovcki] = useState(true);
-  const [loadingRentals, setLoadingRentals] = useState(true);
 
   useEffect(() => {
     // Fetch kovcki first so the form can render as soon as kovcki are available.
@@ -41,8 +40,6 @@ export default function DodajNajemPage() {
         setRentals(fetchedRentals);
       } catch (e) {
         console.error("Error fetching rentals:", e);
-      } finally {
-        setLoadingRentals(false);
       }
     };
 
