@@ -5,14 +5,17 @@ import { setDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Rental, Kovcek } from "@/lib/types";
 import { checkIfAvailable } from "@/lib/rentals";
+import { useRouter } from "next/navigation";
 
 type Props = {
-  kovcki: Kovcek[];
+  kovcki: Kovcek[]; // že filtrirani kovčki glede na datum
   rentals: Rental[];
   setRentals: React.Dispatch<React.SetStateAction<Rental[]>>;
+  onDatumChange?: (date: Date | null) => void; // pokliče parent ob spremembi datuma
 };
 
-export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
+export default function AddRentalForm({ kovcki, rentals, setRentals, onDatumChange }: Props) {
+  const router = useRouter();
   const [formData, setFormData] = useState<Rental & {
     hasOwnKovcek: boolean;
     hasOwnNosilci: boolean;
@@ -43,26 +46,28 @@ export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
   const [successModal, setSuccessModal] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchAvailable = async () => {
-      if (formData.startDate && formData.endDate && !formData.hasOwnKovcek) {
-        const filtered: Kovcek[] = [];
-
-        for (const kovcek of kovcki) {
-          const result = await checkIfAvailable(kovcek.id, formData.startDate, formData.endDate);
-          if (!result.zaseden) {
-            filtered.push(kovcek);
-          }
-        }
-
-        setAvailableKovcki(filtered);
-      } else {
-        setAvailableKovcki([]);
+    // Če uporabnik še ni izbral obeh datumov ali ima svoj kovček, prikaži vse kovčke brez async klicev
+    if (formData.hasOwnKovcek || !formData.startDate || !formData.endDate) {
+      setAvailableKovcki(formData.hasOwnKovcek ? [] : kovcki);
+      if (!formData.hasOwnKovcek) {
         setFormData((fd) => ({ ...fd, itemId: "" }));
       }
-    };
-
-    fetchAvailable();
-  }, [formData.startDate, formData.endDate, formData.hasOwnKovcek, kovcki]);
+      return;
+    }
+    // Ko sta oba datuma izbrana in nima svojega kovčka, filtriraj lokalno glede na rentals
+    const filtered: Kovcek[] = kovcki.filter((kovcek) => {
+      // Poišči vse najeme za ta kovček
+      const najemiZaKovcek = rentals.filter((r) => r.itemId === kovcek.id);
+      // Preveri, če se kateri najem prekriva z izbranimi datumi
+      const zaseden = najemiZaKovcek.some((r) => {
+        return !(
+          formData.endDate < r.startDate || formData.startDate > r.endDate
+        );
+      });
+      return !zaseden;
+    });
+    setAvailableKovcki(filtered);
+  }, [formData.startDate, formData.endDate, formData.hasOwnKovcek, kovcki, rentals]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement;
@@ -184,9 +189,9 @@ export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-2xl shadow-lg max-w-lg mx-auto space-y-5"
       >
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6 border-b border-blue-300 pb-2">
-          Dodaj najem
-        </h2>
+        <p className="text-2xl font-semibold text-gray-900 mb-6 border-b border-blue-300 pb-2">
+          Datum montaže in demontaže
+        </p>
 
         {/* Datumi */}
         <input
@@ -221,7 +226,7 @@ export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
         )}
 
         {/* Select kovček, če nima svojega */}
-        {formData.startDate && formData.endDate && !formData.hasOwnKovcek && (
+        {!formData.hasOwnKovcek && formData.startDate && formData.endDate && (
           <select
             className="w-full border border-gray-300 rounded-md px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
             name="itemId"
@@ -229,7 +234,7 @@ export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
             onChange={handleChange}
             required
           >
-            <option value="">-- Izberi razpoložljiv kovček --</option>
+            <option value="">-- Izberi kovček --</option>
             {availableKovcki.map((k) => (
               <option key={k.id} value={k.id}>
                 {k.name} ({k.desc})
@@ -336,13 +341,7 @@ export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
           Dodaj najem
         </button>
 
-        <button
-          type="button"
-          onClick={() => window.location.href = "/admin"}
-          className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg shadow-md transition mt-4"
-        >
-          Nazaj v admin
-        </button>
+        
       </form>
 
       {/* Modal za zaseden kovček */}
