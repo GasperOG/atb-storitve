@@ -11,11 +11,10 @@ type Props = {
   kovcki: Kovcek[]; // že filtrirani kovčki glede na datum
   rentals: Rental[];
   setRentals: React.Dispatch<React.SetStateAction<Rental[]>>;
-  onDatumChange?: (date: Date | null) => void; // pokliče parent ob spremembi datuma
 };
 
-export default function AddRentalForm({ kovcki, rentals, setRentals, onDatumChange }: Props) {
-  const router = useRouter();
+export default function AddRentalForm({ kovcki, rentals, setRentals }: Props) {
+
   const [formData, setFormData] = useState<Rental & {
     hasOwnKovcek: boolean;
     hasOwnNosilci: boolean;

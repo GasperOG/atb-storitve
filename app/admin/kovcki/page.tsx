@@ -170,7 +170,7 @@ export default function KovckiPage() {
           <p className="text-gray-600">Ni kovčkov.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
-            {filteredKovcki.map((k, index) => (
+            {filteredKovcki.map((k) => (
               <div key={k.id} className="bg-gradient-to-br from-gray-300 via-gray-600 to-blue-900 rounded-2xl shadow-lg p-8 flex flex-col justify-between border border-blue-300 text-white transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-2xl">
                 <div>
                   <div className="flex items-start justify-between mb-3 gap-4">

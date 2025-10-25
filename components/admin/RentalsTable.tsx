@@ -41,7 +41,7 @@ export default function RentalsTable({ rentals, kovcki, showArchive = true }: Re
         // remove query param without adding to history — replace with current pathname
         try {
           router.replace(pathname || "/");
-        } catch (e) {
+        } catch {
           /* ignore */
         }
       }
@@ -53,12 +53,12 @@ export default function RentalsTable({ rentals, kovcki, showArchive = true }: Re
         setArchiveModal({ open: true, rental: r });
         try {
           router.replace(pathname || "/");
-        } catch (e) {
+        } catch {
           /* ignore */
         }
       }
     }
-  }, [searchParams, rentals, router]);
+  }, [searchParams, rentals, router, pathname]);
 
   const sortedFilteredRentals = [...rentals]
     .filter((rental) => !selectedKovcekId || rental.itemId === selectedKovcekId)
@@ -105,8 +105,8 @@ export default function RentalsTable({ rentals, kovcki, showArchive = true }: Re
       // Izbriši iz rentals
       await deleteDoc(doc(db, "rentals", archiveModal.rental.id));
       window.location.reload(); // Zaenkrat reload, lahko kasneje optimiziramo
-    } catch (e) {
-      alert("Napaka pri arhiviranju: " + e);
+    } catch (error) {
+      alert("Napaka pri arhiviranju: " + error);
     } finally {
       setArchiving(false);
       closeArchiveModal();

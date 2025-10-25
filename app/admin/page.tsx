@@ -46,13 +46,13 @@ export default function AdminHome() {
         </div>
         {/* Gumb za vrnitev na javno stran spodaj */}
         <div className="flex justify-center mt-16 mb-8">
-          <a
+          <Link
             href="/"
             className="bg-white/80 hover:bg-white text-blue-900 hover:text-blue-700 border border-blue-300 rounded-full px-8 py-3 font-semibold shadow-lg transition-all duration-300 text-lg focus:outline-none animate-fade-in-up group hover:scale-105 hover:shadow-2xl hover:bg-gradient-to-br hover:from-blue-100 hover:via-blue-200 hover:to-blue-300 hover:border-blue-500 active:scale-100"
             style={{ minWidth: 220, textAlign: 'center', animationDelay: `${menuItems.length * 80 + 200}ms`, animationFillMode: 'both' }}
           >
             ⬅ Nazaj na javno stran
-          </a>
+          </Link>
         </div>
         <style jsx global>{`
           @keyframes fade-in-up {
