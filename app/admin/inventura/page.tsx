@@ -23,20 +23,17 @@ export default function InventuraPage() {
   
   // Form state
   const [formModel, setFormModel] = useState("");
-  const [formSeries, setFormSeries] = useState("");
   const [formKitNumber, setFormKitNumber] = useState(""); // NEW - za kit številko
   const [formVariant, setFormVariant] = useState(""); // for 'foot' (stari/novi)
   const [formLength, setFormLength] = useState(""); // for 'bars' length
   const [formCondition, setFormCondition] = useState<"NOVO" | "RABLJENO" | "NEPOPOLNO">("NOVO");
   const [formNote, setFormNote] = useState("");
-  const [formDesc, setFormDesc] = useState("");
   const [formQuantity, setFormQuantity] = useState<number>(1);
   const [globalSearch, setGlobalSearch] = useState("");
   const [formSaving, setFormSaving] = useState(false);
   const [formEditId, setFormEditId] = useState<string | null>(null);
 
-  // Calculate next serial number
-  const nextSerialNumber = thuleItems.length + 1;
+
 
   // Load Thule items
   const loadThule = async () => {
@@ -120,7 +117,7 @@ export default function InventuraPage() {
     setFormSaving(true);
     try {
       // Build payload without undefined fields to avoid Firestore errors
-      const basePayload: any = {
+      const basePayload: Omit<ThuleItem, "id"> = {
         category: selectedCategory,
         title: selectedCategory === "kit" 
           ? `Kit ${formKitNumber}${formNote ? ` "${formNote}"` : ""}`
@@ -186,10 +183,8 @@ export default function InventuraPage() {
     setFormEditId(null);
     setFormModel("");
     setFormKitNumber("");
-    setFormSeries("");
     setFormCondition("NOVO");
     setFormNote("");
-    setFormDesc("");
     setFormQuantity(1);
     setFormVariant("");
     setFormLength("");
@@ -422,7 +417,6 @@ export default function InventuraPage() {
                         onChange={(e) => {
                           setSelectedCategory(e.target.value as ThuleCategory);
                           setFormModel("");
-                          setFormSeries("");
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >

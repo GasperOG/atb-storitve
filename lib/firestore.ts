@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, setDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, setDoc, type UpdateData, type DocumentData } from "firebase/firestore";
 import { Rental, Nosilec, ThuleItem } from "./types";
 
 const najemiCollection = collection(db, "najemi");
@@ -61,7 +61,7 @@ export const dodajNosilec = async (data: Omit<Nosilec, "id">) => {
 export const updateNosilec = async (id: string, data: Partial<Omit<Nosilec, "id">>) => {
   try {
     const ref = doc(db, "nosilci", id);
-    await updateDoc(ref, data as any);
+    await updateDoc(ref, data as UpdateData<DocumentData>);
   } catch (e) {
     console.error("Napaka pri posodabljanju nosilca:", e);
     throw e;
@@ -112,14 +112,9 @@ export const dodajThule = async (data: Omit<ThuleItem, "id">) => {
       if (item.series !== data.series) return false;
       if (item.model !== data.model) return false;
       if (item.condition !== data.condition) return false;
-      // If data includes variant, ensure it matches
-      if ((data as any).variant !== undefined) {
-        if (item.variant !== (data as any).variant) return false;
-      }
-      // If data includes length, ensure it matches
-      if ((data as any).length !== undefined) {
-        if (item.length !== (data as any).length) return false;
-      }
+      // If data includes variant/length, ensure it matches
+      if (data.variant !== undefined && item.variant !== data.variant) return false;
+      if (data.length !== undefined && item.length !== data.length) return false;
       return true;
     });
     
@@ -144,7 +139,7 @@ export const dodajThule = async (data: Omit<ThuleItem, "id">) => {
 export const updateThule = async (id: string, data: Partial<Omit<ThuleItem, "id">>) => {
   try {
     const ref = doc(db, "thule_items", id);
-    await updateDoc(ref, data as any);
+    await updateDoc(ref, data as UpdateData<DocumentData>);
   } catch (e) {
     console.error("Napaka pri posodabljanju Thule artikla:", e);
     throw e;
