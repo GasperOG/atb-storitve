@@ -4,7 +4,12 @@ import bcrypt from 'bcryptjs'
 export async function POST(req: Request) {
   const { email, password } = await req.json()
 
-  if (email !== process.env.ADMIN_EMAIL) {
+  // Allow multiple admin emails via ADMIN_EMAILS (comma-separated) or single ADMIN_EMAIL
+  const allowed = (process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+  if (!allowed.includes(email)) {
     return NextResponse.json({ error: 'Napačni podatki' }, { status: 401 })
   }
 
@@ -21,7 +26,15 @@ export async function POST(req: Request) {
 
   res.cookies.set('admin', 'true', {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/',
+  })
+
+  // Store a non-http-only cookie with the admin email so client code can include it in audit metadata
+  res.cookies.set('admin_email', email, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     path: '/',
   })

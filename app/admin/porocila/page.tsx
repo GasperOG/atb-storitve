@@ -117,9 +117,16 @@ export default function Porocila() {
     setSaving(true);
     try {
       const device = typeof navigator !== 'undefined' ? navigator.userAgent : undefined;
-      if (editingType === "thule") await updateThule((editingItem as ThuleItem).id, updates, { device });
-      if (editingType === "kovcek") await updateKovcek((editingItem as Kovcek).id, updates, { device });
-      if (editingType === "nosilec") await updateNosilec((editingItem as Nosilec).id, updates, { device });
+      const getCookie = (name: string) => {
+        if (typeof document === 'undefined') return undefined;
+        const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return m ? decodeURIComponent(m[2]) : undefined;
+      };
+      const adminEmail = getCookie('admin_email') ?? null;
+      const meta = { device, user: adminEmail };
+      if (editingType === "thule") await updateThule((editingItem as ThuleItem).id, updates, meta);
+      if (editingType === "kovcek") await updateKovcek((editingItem as Kovcek).id, updates, meta);
+      if (editingType === "nosilec") await updateNosilec((editingItem as Nosilec).id, updates, meta);
       await load();
       closeModal();
     } catch (e) {

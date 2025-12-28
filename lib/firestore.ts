@@ -61,11 +61,11 @@ export const pridobiVseKovcki = async (): Promise<Kovcek[]> => {
 };
 
 // Dodaj nosilec
-export const dodajNosilec = async (data: Omit<Nosilec, "id">, meta?: { device?: string }) => {
+export const dodajNosilec = async (data: Omit<Nosilec, "id">, meta?: { device?: string; user?: string | null }) => {
   try {
     const nosilciCollection = collection(db, "Nosilci");
     const docRef = await addDoc(nosilciCollection, data);
-    try { await addDoc(collection(db, 'audit'), { message: `Dodajanje nosilec ${docRef.id}`, collection: 'nosilci', action: 'create', itemId: docRef.id, device: meta?.device, timestamp: serverTimestamp() }); } catch { /* ignore */ }
+    try { await addDoc(collection(db, 'audit'), { message: `Dodajanje nosilec ${docRef.id}`, collection: 'nosilci', action: 'create', itemId: docRef.id, device: meta?.device, user: meta?.user ?? null, timestamp: serverTimestamp() }); } catch { /* ignore */ }
     return docRef.id;
   } catch (e) {
     console.error("Napaka pri dodajanju nosilca:", e);
@@ -73,7 +73,7 @@ export const dodajNosilec = async (data: Omit<Nosilec, "id">, meta?: { device?: 
   }
 };
 
-export const updateNosilec = async (id: string, data: Partial<Omit<Nosilec, "id">>, meta?: { device?: string }) => {
+export const updateNosilec = async (id: string, data: Partial<Omit<Nosilec, "id">>, meta?: { device?: string; user?: string | null }) => {
   try {
     const ref = doc(db, "nosilci", id);
     const snap = await getDoc(ref);
@@ -85,7 +85,7 @@ export const updateNosilec = async (id: string, data: Partial<Omit<Nosilec, "id"
         const oldVal = old && typeof old === 'object' ? (old as Record<string, unknown>)[key] : undefined;
         const newVal = (data as Record<string, unknown>)[key];
         if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
-          await addDoc(collection(db, 'audit'), { collection: 'nosilci', action: 'update', itemId: id, field: key, oldValue: oldVal ?? null, newValue: newVal ?? null, device: meta?.device, timestamp: serverTimestamp() });
+          await addDoc(collection(db, 'audit'), { collection: 'nosilci', action: 'update', itemId: id, field: key, oldValue: oldVal ?? null, newValue: newVal ?? null, device: meta?.device, user: meta?.user ?? null, timestamp: serverTimestamp() });
         }
       }
     } catch { /* ignore audit errors */ }
@@ -95,10 +95,10 @@ export const updateNosilec = async (id: string, data: Partial<Omit<Nosilec, "id"
   }
 };
 
-export const deleteNosilec = async (id: string) => {
+export const deleteNosilec = async (id: string, meta?: { device?: string; user?: string | null }) => {
   try {
     await deleteDoc(doc(db, "nosilci", id));
-    try { await addDoc(collection(db, 'audit'), { message: `Brisanje nosilec ${id}`, collection: 'nosilci', action: 'delete', itemId: id, timestamp: serverTimestamp() }); } catch { /* ignore */ }
+    try { await addDoc(collection(db, 'audit'), { message: `Brisanje nosilec ${id}`, collection: 'nosilci', action: 'delete', itemId: id, user: meta?.user ?? null, timestamp: serverTimestamp() }); } catch { /* ignore */ }
   } catch (e) {
     console.error("Napaka pri brisanju nosilca:", e);
     throw e;
@@ -119,7 +119,7 @@ export const pridobiVseThule = async (): Promise<ThuleItem[]> => {
   }
 };
 
-export const dodajThule = async (data: Omit<ThuleItem, "id">, meta?: { device?: string }) => {
+export const dodajThule = async (data: Omit<ThuleItem, "id">, meta?: { device?: string; user?: string | null }) => {
   try {
     const col = collection(db, "thule_items");
     
@@ -159,7 +159,7 @@ export const dodajThule = async (data: Omit<ThuleItem, "id">, meta?: { device?: 
     await setDoc(ref, { ...data, quantity: 1 });
     // write audit entry (best-effort)
     try {
-      await addDoc(collection(db, 'audit'), { message: `Dodajanje Thule: ${nextSerial}`, collection: 'thule_items', action: 'create', itemId: nextSerial, device: meta?.device, timestamp: serverTimestamp() });
+      await addDoc(collection(db, 'audit'), { message: `Dodajanje Thule: ${nextSerial}`, collection: 'thule_items', action: 'create', itemId: nextSerial, device: meta?.device, user: meta?.user ?? null, timestamp: serverTimestamp() });
     } catch { /* ignore audit errors */ }
     return nextSerial;
   } catch (e) {
@@ -168,7 +168,7 @@ export const dodajThule = async (data: Omit<ThuleItem, "id">, meta?: { device?: 
   }
 };
 
-export const updateThule = async (id: string, data: Partial<Omit<ThuleItem, "id">>, meta?: { device?: string }) => {
+export const updateThule = async (id: string, data: Partial<Omit<ThuleItem, "id">>, meta?: { device?: string; user?: string | null }) => {
   try {
     const ref = doc(db, "thule_items", id);
     const snap = await getDoc(ref);
@@ -179,7 +179,7 @@ export const updateThule = async (id: string, data: Partial<Omit<ThuleItem, "id"
         const oldVal = old && typeof old === 'object' ? (old as Record<string, unknown>)[key] : undefined;
         const newVal = (data as Record<string, unknown>)[key];
         if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
-          await addDoc(collection(db, 'audit'), { collection: 'thule_items', action: 'update', itemId: id, field: key, oldValue: oldVal ?? null, newValue: newVal ?? null, device: meta?.device, timestamp: serverTimestamp() });
+          await addDoc(collection(db, 'audit'), { collection: 'thule_items', action: 'update', itemId: id, field: key, oldValue: oldVal ?? null, newValue: newVal ?? null, device: meta?.device, user: meta?.user ?? null, timestamp: serverTimestamp() });
         }
       }
     } catch { /* ignore */}
@@ -189,17 +189,17 @@ export const updateThule = async (id: string, data: Partial<Omit<ThuleItem, "id"
   }
 };
 
-export const deleteThule = async (id: string) => {
+export const deleteThule = async (id: string, meta?: { device?: string; user?: string | null }) => {
   try {
     await deleteDoc(doc(db, "thule_items", id));
-    try { await addDoc(collection(db, 'audit'), { message: `Brisanje Thule ${id}`, collection: 'thule_items', action: 'delete', itemId: id, timestamp: serverTimestamp() }); } catch { /* ignore */ }
+    try { await addDoc(collection(db, 'audit'), { message: `Brisanje Thule ${id}`, collection: 'thule_items', action: 'delete', itemId: id, user: meta?.user ?? null, timestamp: serverTimestamp() }); } catch { /* ignore */ }
   } catch (e) {
     console.error("Napaka pri brisanju Thule artikla:", e);
     throw e;
   }
 };
 
-export const updateKovcek = async (id: string, data: Partial<Omit<Kovcek, "id">>, meta?: { device?: string }) => {
+export const updateKovcek = async (id: string, data: Partial<Omit<Kovcek, "id">>, meta?: { device?: string; user?: string | null }) => {
   try {
     const ref = doc(db, "kovcki", id);
     const snap = await getDoc(ref);
@@ -220,10 +220,10 @@ export const updateKovcek = async (id: string, data: Partial<Omit<Kovcek, "id">>
   }
 };
 
-export const dodajKovcek = async (data: Omit<Kovcek, "id">, meta?: { device?: string }) => {
+export const dodajKovcek = async (data: Omit<Kovcek, "id">, meta?: { device?: string; user?: string | null }) => {
   try {
     const ref = await addDoc(collection(db, 'kovcki'), data);
-    try { await addDoc(collection(db, 'audit'), { message: `Dodajanje kovček ${ref.id}`, collection: 'kovcki', action: 'create', itemId: ref.id, device: meta?.device, timestamp: serverTimestamp() }); } catch { /* ignore */ }
+    try { await addDoc(collection(db, 'audit'), { message: `Dodajanje kovček ${ref.id}`, collection: 'kovcki', action: 'create', itemId: ref.id, device: meta?.device, user: meta?.user ?? null, timestamp: serverTimestamp() }); } catch { /* ignore */ }
     return ref.id;
   } catch (e) {
     console.error('Napaka pri dodajanju kovčka:', e);
@@ -231,10 +231,10 @@ export const dodajKovcek = async (data: Omit<Kovcek, "id">, meta?: { device?: st
   }
 };
 
-export const deleteKovcek = async (id: string, meta?: { device?: string }) => {
+export const deleteKovcek = async (id: string, meta?: { device?: string; user?: string | null }) => {
   try {
     await deleteDoc(doc(db, 'kovcki', id));
-    try { await addDoc(collection(db, 'audit'), { message: `Brisanje kovček ${id}`, collection: 'kovcki', action: 'delete', itemId: id, device: meta?.device, timestamp: serverTimestamp() }); } catch { /* ignore */ }
+    try { await addDoc(collection(db, 'audit'), { message: `Brisanje kovček ${id}`, collection: 'kovcki', action: 'delete', itemId: id, device: meta?.device, user: meta?.user ?? null, timestamp: serverTimestamp() }); } catch { /* ignore */ }
   } catch (e) {
     console.error('Napaka pri brisanju kovčka:', e);
     throw e;
