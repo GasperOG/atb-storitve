@@ -5,7 +5,7 @@ import Link from "next/link";
 import { pridobiZadnjeSpremembe } from "@/lib/firestore";
 
 export default function SpremembePage() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Array<Record<string, unknown> & { id?: string }>>([]);
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
@@ -23,17 +23,22 @@ export default function SpremembePage() {
 
   useEffect(() => { load(); }, []);
 
-  const fmt = (t: any) => {
+  const fmt = (t: unknown) => {
     try {
-      const d = t && t.toDate ? t.toDate() : (t ? new Date(t) : null);
-      return d ? d.toLocaleString() : "";
-    } catch (e) { return String(t || ""); }
+      if (t && typeof (t as { toDate?: unknown }).toDate === "function") {
+        const d = (t as { toDate: () => Date }).toDate();
+        return d ? d.toLocaleString() : "";
+      }
+      const d = t ? new Date(String(t)) : null;
+      return d && !Number.isNaN(d.getTime()) ? d.toLocaleString() : "";
+    } catch { return String(t ?? ""); }
   };
 
-  const pretty = (v: any) => {
-    if (v === null || v === undefined) return String(v === null ? 'null' : '');
+  const pretty = (v: unknown) => {
+    if (v === null) return 'null';
+    if (v === undefined) return '';
     if (typeof v === 'object') {
-      try { return JSON.stringify(v); } catch (e) { return String(v); }
+      try { return JSON.stringify(v); } catch { return String(v); }
     }
     return String(v);
   };
@@ -63,24 +68,24 @@ export default function SpremembePage() {
           <div className="space-y-3">
             {items.length === 0 && !loading && <p className="text-gray-500">Ni zapisov.</p>}
             {items.map((a) => (
-              <div key={a.id} className="bg-white rounded-lg p-3 border">
+              <div key={String(a.id)} className="bg-white rounded-lg p-3 border">
                 <div className="flex justify-between items-start">
                   <div className="pr-4">
-                    <div className="font-medium text-gray-800">{a.message ?? (a.collection ? `${a.action || 'posodobitev'} ${a.collection} ${a.itemId || ''}` : 'Sprememba')}</div>
+                    <div className="font-medium text-gray-800">{String(a.message ?? (a.collection ? `${a.action || 'posodobitev'} ${String(a.collection)} ${String(a.itemId || '')}` : 'Sprememba'))}</div>
                     <div className="text-sm text-gray-600 mt-1">
                       {a.field ? (
                         <div>
-                          <span className="text-xs text-gray-500 mr-2">{a.collection}</span>
-                          <div className="mt-1">{a.field}: <span className="font-semibold">{pretty(a.oldValue)}</span> → <span className="font-semibold">{pretty(a.newValue)}</span></div>
+                          <span className="text-xs text-gray-500 mr-2">{String(a.collection)}</span>
+                          <div className="mt-1">{String(a.field)}: <span className="font-semibold">{pretty(a.oldValue)}</span> → <span className="font-semibold">{pretty(a.newValue)}</span></div>
                         </div>
                       ) : (
-                        a.details ?? ''
+                        String(a.details ?? '')
                       )}
                     </div>
                   </div>
                   <div className="text-sm text-gray-500 text-right">
                     <div>{fmt(a.timestamp)}</div>
-                    {a.device && <div className="mt-1 text-xs text-gray-600">{a.device}</div>}
+                    {a.device ? <div className="mt-1 text-xs text-gray-600">{String(a.device)}</div> : null}
                   </div>
                 </div>
               </div>

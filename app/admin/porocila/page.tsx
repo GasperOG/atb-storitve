@@ -11,6 +11,23 @@ import {
   updateNosilec,
 } from "@/lib/firestore";
 
+type ItemLike = {
+  id?: string;
+  series?: string;
+  model?: string;
+  title?: string;
+  category?: string;
+  quantity?: number;
+  variant?: string;
+  length?: number;
+  note?: string;
+  condition?: string;
+  purchasePrice?: number;
+  sellPrice?: number;
+  name?: string;
+  desc?: string;
+};
+
 export default function Porocila() {
   const [thuleItems, setThuleItems] = useState<ThuleItem[]>([]);
   const [kovcki, setKovcki] = useState<Kovcek[]>([]);
@@ -65,8 +82,9 @@ export default function Porocila() {
   const openPriceModal = (item: ThuleItem | Kovcek | Nosilec, type: "thule" | "kovcek" | "nosilec") => {
     setEditingItem(item);
     setEditingType(type);
-    setPurchaseInput((item as any).purchasePrice != null ? String((item as any).purchasePrice) : "");
-    setSellInput((item as any).sellPrice != null ? String((item as any).sellPrice) : "");
+    const it = item as ItemLike;
+    setPurchaseInput(it.purchasePrice != null ? String(it.purchasePrice) : "");
+    setSellInput(it.sellPrice != null ? String(it.sellPrice) : "");
     setModalOpen(true);
   };
 
@@ -85,7 +103,8 @@ export default function Porocila() {
 
   const savePrices = async () => {
     if (!editingItem || !editingType) return;
-    const updates: any = {};
+    type PriceUpdates = Partial<{ purchasePrice: number; sellPrice: number }>;
+    const updates: PriceUpdates = {};
     if (purchaseInput.trim() !== "") {
       const v = Number(purchaseInput);
       if (!isNaN(v)) updates.purchasePrice = v;
@@ -116,7 +135,8 @@ export default function Porocila() {
   const q = search.trim().toLowerCase();
   const filteredThule = thuleItems.filter((it) => {
     if (!q) return true;
-    const hay = [String((it as any).id), (it as any).series, (it as any).model, (it as any).title].filter(Boolean).join(' ').toLowerCase();
+    const ii = it as ItemLike;
+    const hay = [String(ii.id), ii.series, ii.model, ii.title].filter(Boolean).join(' ').toLowerCase();
     return hay.includes(q);
   });
   const filteredKovcki = kovcki.filter((k) => {
@@ -129,30 +149,30 @@ export default function Porocila() {
   });
 
   const thuleByCategory: Record<ThuleCategory, ThuleItem[]> = {
-    kit: thuleItems.filter((it) => (it as any).category === 'kit'),
-    foot: thuleItems.filter((it) => (it as any).category === 'foot'),
-    bars: thuleItems.filter((it) => (it as any).category === 'bars'),
-    bike_stand: thuleItems.filter((it) => (it as any).category === 'bike_stand'),
-    ski_stand: thuleItems.filter((it) => (it as any).category === 'ski_stand'),
+    kit: thuleItems.filter((it) => (it as ItemLike).category === 'kit'),
+    foot: thuleItems.filter((it) => (it as ItemLike).category === 'foot'),
+    bars: thuleItems.filter((it) => (it as ItemLike).category === 'bars'),
+    bike_stand: thuleItems.filter((it) => (it as ItemLike).category === 'bike_stand'),
+    ski_stand: thuleItems.filter((it) => (it as ItemLike).category === 'ski_stand'),
   };
 
   const getItemTitle = (item: ThuleItem | Kovcek | Nosilec) => {
-    const it: any = item;
+    const it: ItemLike = item as ItemLike;
     const stripQuoted = (s: string) => String(s || "").replace(/['"“”].*['"“”]/, "").trim();
-    if ((it as any).category === "kit") {
+    if (it.category === "kit") {
       const candidate = (it.model && `Kit ${it.model}`) || (it.title && stripQuoted(it.title)) || `${it.series || ""} ${it.model || ""}`.trim();
       const base = String(candidate || "").trim();
       return it.quantity ? `${base} (${it.quantity})` : base;
     }
-    if ((it as any).category === "foot") {
+    if (it.category === "foot") {
       const base = `Noge ${it.model || ""}`.trim();
       return it.quantity ? `${base} (${it.quantity})` : base;
     }
-    if ((it as any).category === "bars") {
+    if (it.category === "bars") {
       const base = `Palice ${it.model || (it.length ? it.length + " cm" : "")}`.trim();
       return it.quantity ? `${base} (${it.quantity})` : base;
     }
-    if ((it as any).category === "bike_stand" || (it as any).category === "ski_stand") {
+    if (it.category === "bike_stand" || it.category === "ski_stand") {
       const base = `Nosilec ${it.model || ""}`.trim();
       return it.quantity ? `${base} (${it.quantity})` : base;
     }
@@ -161,14 +181,14 @@ export default function Porocila() {
     return `${it.series || ""} ${it.model || ""}`.trim();
   };
 
-  const getCategoryLabel = (cat: string) => {
+  const getCategoryLabel = (cat?: string) => {
     switch (cat) {
       case "kit": return "Kit";
       case "foot": return "Noge";
       case "bars": return "Palice";
       case "bike_stand": return "Nosilec koles";
       case "ski_stand": return "Nosilec smuč";
-      default: return cat;
+      default: return cat ?? '';
     }
   };
 
@@ -233,18 +253,26 @@ export default function Porocila() {
                                 <div>
                                   <h3 className="font-semibold text-gray-900">{getItemTitle(item)}</h3>
                                   <div className="text-sm text-gray-600 mt-1">
-                                    {!['kit','foot','bars','bike_stand','ski_stand'].includes((item as any).category) && <span className="mr-2">{getCategoryLabel((item as any).category)}</span>}
+                                    {(() => {
+                                      const cat = (item as ItemLike).category ?? '';
+                                      return (
+                                        !['kit','foot','bars','bike_stand','ski_stand'].includes(cat) && <span className="mr-2">{getCategoryLabel(cat)}</span>
+                                      );
+                                    })()}
                                     {item.condition && <span className="mr-2">Stanje: <span className="font-medium">{item.condition}</span></span>}
-                                    {!['kit','foot','bars','bike_stand','ski_stand'].includes((item as any).category) && item.quantity && <span className="mr-2">Količina: <span className="font-medium">{item.quantity}</span></span>}
-                                    {(item as any).variant && <span className="mr-2">Varianta: <span className="font-medium">{(item as any).variant}</span></span>}
-                                    {(item as any).length && <span className="mr-2">Dolžina: <span className="font-medium">{(item as any).length} cm</span></span>}
+                                    {(() => {
+                                      const cat = (item as ItemLike).category ?? '';
+                                      return (!['kit','foot','bars','bike_stand','ski_stand'].includes(cat) && item.quantity && <span className="mr-2">Količina: <span className="font-medium">{item.quantity}</span></span>);
+                                    })()}
+                                    {(item as ItemLike).variant && <span className="mr-2">Varianta: <span className="font-medium">{(item as ItemLike).variant}</span></span>}
+                                    {(item as ItemLike).length && <span className="mr-2">Dolžina: <span className="font-medium">{(item as ItemLike).length} cm</span></span>}
                                   </div>
-                                    {(item as any).note && <span className="text-sm text-gray-500">Opomba: <span className="font-medium">{(item as any).note}</span></span>}
+                                    {(item as ItemLike).note && <span className="text-sm text-gray-500">Opomba: <span className="font-medium">{(item as ItemLike).note}</span></span>}
                                 </div>
                               </div>
                               <div className="flex gap-2 items-center sm:mt-0 mt-3">
-                                {(item as any).purchasePrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(item as any).purchasePrice}€</span>}
-                                {(item as any).sellPrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(item as any).sellPrice}€</span>}
+                                {(item as ItemLike).purchasePrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(item as ItemLike).purchasePrice}€</span>}
+                                {(item as ItemLike).sellPrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(item as ItemLike).sellPrice}€</span>}
                                 <button onClick={() => openPriceModal(item, 'thule')} className="px-3 py-2 bg-yellow-400 rounded text-sm">Uredi cene</button>
                               </div>
                             </div>
@@ -266,8 +294,8 @@ export default function Porocila() {
                                 {k.desc && <p className="text-sm text-gray-600">{k.desc}</p>}
                               </div>
                               <div className="flex gap-2 items-center sm:mt-0 mt-3">
-                                {(k as any).purchasePrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(k as any).purchasePrice}€</span>}
-                                {(k as any).sellPrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(k as any).sellPrice}€</span>}
+                                {(k as ItemLike).purchasePrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(k as ItemLike).purchasePrice}€</span>}
+                                {(k as ItemLike).sellPrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(k as ItemLike).sellPrice}€</span>}
                                 <button onClick={() => openPriceModal(k, 'kovcek')} className="px-3 py-2 bg-blue-600 text-white rounded text-sm">Uredi cene</button>
                               </div>
                             </div>
@@ -289,8 +317,8 @@ export default function Porocila() {
                                 {n.desc && <p className="text-sm text-gray-600">{n.desc}</p>}
                               </div>
                               <div className="flex gap-2 items-center sm:mt-0 mt-3">
-                                {(n as any).purchasePrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(n as any).purchasePrice}€</span>}
-                                {(n as any).sellPrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(n as any).sellPrice}€</span>}
+                                {(n as ItemLike).purchasePrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(n as ItemLike).purchasePrice}€</span>}
+                                {(n as ItemLike).sellPrice !== undefined && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(n as ItemLike).sellPrice}€</span>}
                                 <button onClick={() => openPriceModal(n, 'nosilec')} className="px-3 py-2 bg-blue-600 text-white rounded text-sm">Uredi cene</button>
                               </div>
                             </div>
@@ -315,8 +343,8 @@ export default function Porocila() {
                                 {k.desc && <p className="text-sm text-gray-600">{k.desc}</p>}
                               </div>
                               <div className="flex gap-2 items-center">
-                                {(k as any).purchasePrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(k as any).purchasePrice}€</span>}
-                                {(k as any).sellPrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(k as any).sellPrice}€</span>}
+                                {(k as ItemLike).purchasePrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(k as ItemLike).purchasePrice}€</span>}
+                                {(k as ItemLike).sellPrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(k as ItemLike).sellPrice}€</span>}
                                 <button onClick={() => openPriceModal(k, 'kovcek')} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">Uredi cene</button>
                               </div>
                             </div>
@@ -336,8 +364,8 @@ export default function Porocila() {
                                 {n.desc && <p className="text-sm text-gray-600">{n.desc}</p>}
                               </div>
                               <div className="flex gap-2 items-center">
-                                {(n as any).purchasePrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(n as any).purchasePrice}€</span>}
-                                {(n as any).sellPrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(n as any).sellPrice}€</span>}
+                                {(n as ItemLike).purchasePrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(n as ItemLike).purchasePrice}€</span>}
+                                {(n as ItemLike).sellPrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(n as ItemLike).sellPrice}€</span>}
                                 <button onClick={() => openPriceModal(n, 'nosilec')} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">Uredi cene</button>
                               </div>
                             </div>
@@ -357,18 +385,24 @@ export default function Porocila() {
                                   <div>
                                     <h3 className="font-semibold text-gray-900">{getItemTitle(t)}</h3>
                                     <div className="text-sm text-gray-600 mt-1">
-                                      {!['kit','foot','bars','bike_stand','ski_stand'].includes((t as any).category) && <span className="mr-2">{getCategoryLabel((t as any).category)}</span>}
+                                      {(() => {
+                                        const cat = (t as ItemLike).category ?? '';
+                                        return (!['kit','foot','bars','bike_stand','ski_stand'].includes(cat) && <span className="mr-2">{getCategoryLabel(cat)}</span>);
+                                      })()}
                                       {t.condition && <span className="mr-2">Stanje: <span className="font-medium">{t.condition}</span></span>}
-                                      {!['kit','foot','bars','bike_stand','ski_stand'].includes((t as any).category) && t.quantity && <span className="mr-2">Količina: <span className="font-medium">{t.quantity}</span></span>}
-                                      {(t as any).variant && <span className="mr-2">Varianta: <span className="font-medium">{(t as any).variant}</span></span>}
-                                      {(t as any).length && <span className="mr-2">Dolžina: <span className="font-medium">{(t as any).length} cm</span></span>}
+                                      {(() => {
+                                        const cat = (t as ItemLike).category ?? '';
+                                        return (!['kit','foot','bars','bike_stand','ski_stand'].includes(cat) && t.quantity && <span className="mr-2">Količina: <span className="font-medium">{t.quantity}</span></span>);
+                                      })()}
+                                      {(t as ItemLike).variant && <span className="mr-2">Varianta: <span className="font-medium">{(t as ItemLike).variant}</span></span>}
+                                      {(t as ItemLike).length && <span className="mr-2">Dolžina: <span className="font-medium">{(t as ItemLike).length} cm</span></span>}
                                     </div>
-                                    {(t as any).note && <span className="text-sm text-gray-500">Opomba: <span className="font-medium">{(t as any).note}</span></span>}
+                                    {(t as ItemLike).note && <span className="text-sm text-gray-500">Opomba: <span className="font-medium">{(t as ItemLike).note}</span></span>}
                                   </div>
                                 </div>
                                 <div className="flex gap-2 items-center sm:mt-0 mt-3">
-                                  {(t as any).purchasePrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(t as any).purchasePrice}€</span>}
-                                  {(t as any).sellPrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(t as any).sellPrice}€</span>}
+                                  {(t as ItemLike).purchasePrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-800 border border-green-100">Nab: {(t as ItemLike).purchasePrice}€</span>}
+                                  {(t as ItemLike).sellPrice !== undefined && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">Prod: {(t as ItemLike).sellPrice}€</span>}
                                   <div className="flex gap-2">
                                     <button onClick={() => openPriceModal(t, 'thule')} className="px-3 py-1 bg-blue-600 text-white rounded">Uredi cene</button>
                                   </div>
@@ -389,7 +423,7 @@ export default function Porocila() {
       {(modalOpen || modalClosing) && editingItem && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className={`bg-white p-6 rounded-2xl max-w-md w-full shadow-2xl ${modalClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
-            <h3 className="text-2xl font-bold mb-3">Uredi cene — {((editingItem as any).model || (editingItem as any).title || (editingItem as any).name || (editingItem as any).series)}</h3>
+            <h3 className="text-2xl font-bold mb-3">Uredi cene — {(((editingItem as ItemLike).model) || ((editingItem as ItemLike).title) || ((editingItem as ItemLike).name) || ((editingItem as ItemLike).series))}</h3>
             <p className="text-sm text-gray-600 mb-4">Izpolni polja za nabavno in/ali prodajno ceno.</p>
             <div className="space-y-3">
               <div>
