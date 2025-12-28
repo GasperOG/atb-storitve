@@ -72,11 +72,25 @@ export default function InventuraPage() {
     : thuleByCategory[selectedCategory];
 
   const getItemTitle = (item: ThuleItem) => {
-    if (item.category === "kit") return item.title;
-    if (item.category === "foot") return `Noge ${item.model || ""}`.trim();
-    if (item.category === "bars") return `Palice ${item.model || (item.length ? item.length + " cm" : "")}`.trim();
-    if (item.category === "bike_stand" || item.category === "ski_stand") return `Nosilec ${item.model || ""}`.trim();
-    return item.title;
+    const stripQuoted = (s: string) => String(s || "").replace(/['"“”].*['"“”]/, "").trim();
+    if (item.category === "kit") {
+      const candidate = (item.model && `Kit ${item.model}`) || (item.title && stripQuoted(item.title)) || `${item.series || ""} ${item.model || ""}`.trim();
+      const base = String(candidate || "").trim();
+      return item.quantity ? `${base} (${item.quantity})` : base;
+    }
+    if (item.category === "foot") {
+      const base = `Noge ${item.model || ""}`.trim();
+      return item.quantity ? `${base} (${item.quantity})` : base;
+    }
+    if (item.category === "bars") {
+      const base = `Palice ${item.model || (item.length ? item.length + " cm" : "")}`.trim();
+      return item.quantity ? `${base} (${item.quantity})` : base;
+    }
+    if (item.category === "bike_stand" || item.category === "ski_stand") {
+      const base = `Nosilec ${item.model || ""}`.trim();
+      return item.quantity ? `${base} (${item.quantity})` : base;
+    }
+    return stripQuoted(item.title || "");
   };
 
   // Handle add/edit thule item
@@ -135,9 +149,11 @@ export default function InventuraPage() {
       const newItem: Omit<ThuleItem, "id"> = basePayload;
 
       if (formEditId) {
-        await updateThule(formEditId, newItem);
+        const device = typeof navigator !== 'undefined' ? navigator.userAgent : undefined;
+        await updateThule(formEditId, newItem, { device });
       } else {
-        await dodajThule(newItem);
+        const device = typeof navigator !== 'undefined' ? navigator.userAgent : undefined;
+        await dodajThule(newItem, { device });
       }
 
       await loadThule();
@@ -311,7 +327,7 @@ export default function InventuraPage() {
                                             {item.condition && (
                                               <p className="text-sm text-gray-600">Stanje: <span className="font-medium">{item.condition}</span></p>
                                             )}
-                                            {item.quantity && (
+                                            {!['kit','foot','bars','bike_stand','ski_stand'].includes(item.category) && item.quantity && (
                                               <p className="text-sm text-gray-600">Količina: <span className="font-medium">{item.quantity}</span></p>
                                             )}
                                             {item.variant && (
@@ -366,7 +382,7 @@ export default function InventuraPage() {
                                   {item.condition && (
                                     <p className="text-sm text-gray-600">Stanje: <span className="font-medium">{item.condition}</span></p>
                                   )}
-                                  {item.quantity && (
+                                  {!['kit','foot','bars','bike_stand','ski_stand'].includes(item.category) && item.quantity && (
                                     <p className="text-sm text-gray-600">Količina: <span className="font-medium">{item.quantity}</span></p>
                                   )}
                                   {item.variant && (

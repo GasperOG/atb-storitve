@@ -21,6 +21,8 @@ export interface Kovcek {
   id: string;
   name: string;
   desc: string;
+  purchasePrice?: number;
+  sellPrice?: number;
 }
 
 export interface Nosilec {
@@ -29,6 +31,8 @@ export interface Nosilec {
   desc?: string;
   quantity?: number;
   location?: string;
+  purchasePrice?: number;
+  sellPrice?: number;
 }
 
 export type ThuleCategory = "kit" | "foot" | "bars" | "bike_stand" | "ski_stand";
@@ -44,4 +48,6 @@ export interface ThuleItem {
   length?: string; // e.g. length for bars (stored as string)
   condition?: "NOVO" | "RABLJENO" | "NEPOPOLNO"; // condition for all
   quantity?: number; // default 1
+  purchasePrice?: number;
+  sellPrice?: number;
 }

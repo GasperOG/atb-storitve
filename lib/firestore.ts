@@ -1,6 +1,6 @@
 import { db } from "./firebase";
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, setDoc, type UpdateData, type DocumentData } from "firebase/firestore";
-import { Rental, Nosilec, ThuleItem } from "./types";
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, setDoc, query, orderBy, limit, serverTimestamp, getDoc, type UpdateData, type DocumentData } from "firebase/firestore";
+import { Rental, Nosilec, ThuleItem, Kovcek } from "./types";
 
 const najemiCollection = collection(db, "najemi");
 
@@ -46,11 +46,26 @@ export const pridobiVseNosilce = async (): Promise<Nosilec[]> => {
   }
 };
 
+// Pridobi vse kovčke
+export const pridobiVseKovcki = async (): Promise<Kovcek[]> => {
+  try {
+    const kovckiCollection = collection(db, "kovcki");
+    const snap = await getDocs(kovckiCollection);
+    const kovcki: Kovcek[] = [];
+    snap.forEach((d) => kovcki.push({ id: d.id, ...(d.data() as Omit<Kovcek, "id">) }));
+    return kovcki;
+  } catch (e) {
+    console.error("Napaka pri pridobivanju kovčkov:", e);
+    throw e;
+  }
+};
+
 // Dodaj nosilec
-export const dodajNosilec = async (data: Omit<Nosilec, "id">) => {
+export const dodajNosilec = async (data: Omit<Nosilec, "id">, meta?: { device?: string }) => {
   try {
     const nosilciCollection = collection(db, "Nosilci");
     const docRef = await addDoc(nosilciCollection, data);
+    try { await addDoc(collection(db, 'audit'), { message: `Dodajanje nosilec ${docRef.id}`, collection: 'nosilci', action: 'create', itemId: docRef.id, device: meta?.device, timestamp: serverTimestamp() }); } catch(e){/* ignore */}
     return docRef.id;
   } catch (e) {
     console.error("Napaka pri dodajanju nosilca:", e);
@@ -58,10 +73,22 @@ export const dodajNosilec = async (data: Omit<Nosilec, "id">) => {
   }
 };
 
-export const updateNosilec = async (id: string, data: Partial<Omit<Nosilec, "id">>) => {
+export const updateNosilec = async (id: string, data: Partial<Omit<Nosilec, "id">>, meta?: { device?: string }) => {
   try {
     const ref = doc(db, "nosilci", id);
+    const snap = await getDoc(ref);
+    const old = snap.exists() ? (snap.data() as any) : {};
     await updateDoc(ref, data as UpdateData<DocumentData>);
+    // write per-field audit entries (best-effort)
+    try {
+      for (const key of Object.keys(data)) {
+        const oldVal = old ? (old as any)[key] : undefined;
+        const newVal = (data as any)[key];
+        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+          await addDoc(collection(db, 'audit'), { collection: 'nosilci', action: 'update', itemId: id, field: key, oldValue: oldVal ?? null, newValue: newVal ?? null, device: meta?.device, timestamp: serverTimestamp() });
+        }
+      }
+    } catch(e){/* ignore audit errors */}
   } catch (e) {
     console.error("Napaka pri posodabljanju nosilca:", e);
     throw e;
@@ -71,6 +98,7 @@ export const updateNosilec = async (id: string, data: Partial<Omit<Nosilec, "id"
 export const deleteNosilec = async (id: string) => {
   try {
     await deleteDoc(doc(db, "nosilci", id));
+    try { await addDoc(collection(db, 'audit'), { message: `Brisanje nosilec ${id}`, collection: 'nosilci', action: 'delete', itemId: id, timestamp: serverTimestamp() }); } catch(e){/* ignore */}
   } catch (e) {
     console.error("Napaka pri brisanju nosilca:", e);
     throw e;
@@ -91,7 +119,7 @@ export const pridobiVseThule = async (): Promise<ThuleItem[]> => {
   }
 };
 
-export const dodajThule = async (data: Omit<ThuleItem, "id">) => {
+export const dodajThule = async (data: Omit<ThuleItem, "id">, meta?: { device?: string }) => {
   try {
     const col = collection(db, "thule_items");
     
@@ -129,6 +157,10 @@ export const dodajThule = async (data: Omit<ThuleItem, "id">) => {
     // Create new document with serial number as ID using setDoc
     const ref = doc(db, "thule_items", nextSerial);
     await setDoc(ref, { ...data, quantity: 1 });
+    // write audit entry (best-effort)
+    try {
+      await addDoc(collection(db, 'audit'), { message: `Dodajanje Thule: ${nextSerial}`, collection: 'thule_items', action: 'create', itemId: nextSerial, device: meta?.device, timestamp: serverTimestamp() });
+    } catch (err) { /* ignore audit errors */ }
     return nextSerial;
   } catch (e) {
     console.error("Napaka pri dodajanju Thule artikla:", e);
@@ -136,10 +168,21 @@ export const dodajThule = async (data: Omit<ThuleItem, "id">) => {
   }
 };
 
-export const updateThule = async (id: string, data: Partial<Omit<ThuleItem, "id">>) => {
+export const updateThule = async (id: string, data: Partial<Omit<ThuleItem, "id">>, meta?: { device?: string }) => {
   try {
     const ref = doc(db, "thule_items", id);
+    const snap = await getDoc(ref);
+    const old = snap.exists() ? (snap.data() as any) : {};
     await updateDoc(ref, data as UpdateData<DocumentData>);
+    try {
+      for (const key of Object.keys(data)) {
+        const oldVal = old ? (old as any)[key] : undefined;
+        const newVal = (data as any)[key];
+        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+          await addDoc(collection(db, 'audit'), { collection: 'thule_items', action: 'update', itemId: id, field: key, oldValue: oldVal ?? null, newValue: newVal ?? null, device: meta?.device, timestamp: serverTimestamp() });
+        }
+      }
+    } catch(e){/* ignore */}
   } catch (e) {
     console.error("Napaka pri posodabljanju Thule artikla:", e);
     throw e;
@@ -149,8 +192,66 @@ export const updateThule = async (id: string, data: Partial<Omit<ThuleItem, "id"
 export const deleteThule = async (id: string) => {
   try {
     await deleteDoc(doc(db, "thule_items", id));
+    try { await addDoc(collection(db, 'audit'), { message: `Brisanje Thule ${id}`, collection: 'thule_items', action: 'delete', itemId: id, timestamp: serverTimestamp() }); } catch(e){/* ignore */}
   } catch (e) {
     console.error("Napaka pri brisanju Thule artikla:", e);
     throw e;
+  }
+};
+
+export const updateKovcek = async (id: string, data: Partial<Omit<Kovcek, "id">>, meta?: { device?: string }) => {
+  try {
+    const ref = doc(db, "kovcki", id);
+    const snap = await getDoc(ref);
+    const old = snap.exists() ? (snap.data() as any) : {};
+    await updateDoc(ref, data as UpdateData<DocumentData>);
+    try {
+      for (const key of Object.keys(data)) {
+        const oldVal = old ? (old as any)[key] : undefined;
+        const newVal = (data as any)[key];
+        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+          await addDoc(collection(db, 'audit'), { collection: 'kovcki', action: 'update', itemId: id, field: key, oldValue: oldVal ?? null, newValue: newVal ?? null, device: meta?.device, timestamp: serverTimestamp() });
+        }
+      }
+    } catch(e){/* ignore */}
+  } catch (e) {
+    console.error("Napaka pri posodabljanju kovčka:", e);
+    throw e;
+  }
+};
+
+export const dodajKovcek = async (data: Omit<Kovcek, "id">, meta?: { device?: string }) => {
+  try {
+    const ref = await addDoc(collection(db, 'kovcki'), data);
+    try { await addDoc(collection(db, 'audit'), { message: `Dodajanje kovček ${ref.id}`, collection: 'kovcki', action: 'create', itemId: ref.id, device: meta?.device, timestamp: serverTimestamp() }); } catch(e){/* ignore */}
+    return ref.id;
+  } catch (e) {
+    console.error('Napaka pri dodajanju kovčka:', e);
+    throw e;
+  }
+};
+
+export const deleteKovcek = async (id: string, meta?: { device?: string }) => {
+  try {
+    await deleteDoc(doc(db, 'kovcki', id));
+    try { await addDoc(collection(db, 'audit'), { message: `Brisanje kovček ${id}`, collection: 'kovcki', action: 'delete', itemId: id, device: meta?.device, timestamp: serverTimestamp() }); } catch(e){/* ignore */}
+  } catch (e) {
+    console.error('Napaka pri brisanju kovčka:', e);
+    throw e;
+  }
+};
+
+// Pridobi zadnje spremembe iz kolekcije 'audit' (če obstaja)
+export const pridobiZadnjeSpremembe = async (limitCount = 20): Promise<any[]> => {
+  try {
+    const col = collection(db, 'audit');
+    const q = query(col, orderBy('timestamp', 'desc'), limit(limitCount));
+    const snap = await getDocs(q);
+    const items: any[] = [];
+    snap.forEach((d) => items.push({ id: d.id, ...(d.data() as any) }));
+    return items;
+  } catch (e) {
+    console.warn('Kolekcija audit verjetno ne obstaja ali napaka pri pridobivanju:', e);
+    return [];
   }
 };
