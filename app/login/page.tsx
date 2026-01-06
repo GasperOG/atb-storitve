@@ -2,7 +2,7 @@
 import { useState } from 'react'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -14,11 +14,11 @@ export default function LoginPage() {
       const res = await fetch('/api/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       })
 
       if (!res.ok) {
-        setError('Napačen email ali geslo')
+        setError('Napačen uporabniško ime ali geslo')
         return
       }
 
@@ -53,8 +53,8 @@ export default function LoginPage() {
                 type="email"
                 inputMode="email"
                 autoComplete="username"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                value={username}
+                onChange={e => setUsername(e.target.value)}
                 placeholder="Uporabniško ime"
                 className="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
