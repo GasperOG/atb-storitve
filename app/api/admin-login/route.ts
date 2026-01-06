@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 
+type Admin = {
+  username: string
+  hash: string
+}
+
 export async function POST(req: Request) {
   const body = await req.json()
   console.log('BODY:', body)
@@ -8,10 +13,14 @@ export async function POST(req: Request) {
   const raw = process.env.ADMINS_JSON
   console.log('RAW ENV:', raw)
 
-  const admins = JSON.parse(raw || '[]')
+  if (!raw) {
+    throw new Error('ADMINS_JSON is missing')
+  }
+
+  const admins = JSON.parse(raw) as Admin[]
   console.log('ADMINS:', admins)
 
-  const admin = admins.find((a: any) => a.username === body.username)
+  const admin = admins.find(a => a.username === body.username)
   console.log('FOUND ADMIN:', admin)
 
   if (!admin) {
