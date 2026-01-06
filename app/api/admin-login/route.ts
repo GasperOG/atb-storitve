@@ -2,39 +2,35 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 
 export async function POST(req: Request) {
-  const { email, password } = await req.json()
+  const body = await req.json()
+  console.log('BODY:', body)
 
-  // Allow multiple admin emails via ADMIN_EMAILS (comma-separated) or single ADMIN_EMAIL
-  const allowed = (process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || '')
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean)
-  if (!allowed.includes(email)) {
-    return NextResponse.json({ error: 'Napačni podatki' }, { status: 401 })
+  const raw = process.env.ADMINS_JSON
+  console.log('RAW ENV:', raw)
+
+  const admins = JSON.parse(raw || '[]')
+  console.log('ADMINS:', admins)
+
+  const admin = admins.find((a: any) => a.username === body.username)
+  console.log('FOUND ADMIN:', admin)
+
+  if (!admin) {
+    console.log('❌ USER NOT FOUND')
+    return NextResponse.json({ error: 'NO USER' }, { status: 401 })
   }
 
-  const ok = await bcrypt.compare(
-    password,
-    process.env.ADMIN_PASSWORD_HASH!
-  )
+  const ok = await bcrypt.compare(body.password, admin.hash)
+  console.log('COMPARE RESULT:', ok)
 
   if (!ok) {
-    return NextResponse.json({ error: 'Napačni podatki' }, { status: 401 })
+    console.log('❌ BAD PASSWORD')
+    return NextResponse.json({ error: 'BAD PASSWORD' }, { status: 401 })
   }
 
   const res = NextResponse.json({ ok: true })
-
   res.cookies.set('admin', 'true', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    path: '/',
-  })
-
-  // Store a non-http-only cookie with the admin email so client code can include it in audit metadata
-  res.cookies.set('admin_email', email, {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     sameSite: 'strict',
     path: '/',
   })
