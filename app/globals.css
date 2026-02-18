@@ -16,10 +16,12 @@ body {
   font-family: 'Inter', Arial, Helvetica, sans-serif;
   background-color: #ffffff;
   color: #111827;
+  overflow-x: hidden;
 }
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 @keyframes fadeIn {

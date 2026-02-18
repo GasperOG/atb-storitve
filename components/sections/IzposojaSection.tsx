@@ -10,7 +10,7 @@ const products = [
       "Prostorni strešni kovčki za varno shranjevanje prtljage na daljših potovanjih. Različne velikosti za vsako potrebo.",
     features: ["300–600 litrov", "Enostavna montaža", "Zaklepanje"],
     image: "/thule_kovcek.png",
-    href: "/izposoja",
+    href: "#kontakt",
   },
   {
     title: "Prečni nosilci",
@@ -18,7 +18,7 @@ const products = [
       "Univerzalni in vozilno-specifični prečni nosilci za varen transport na strehi vašega vozila.",
     features: ["Univerzalni", "Za vsak avto", "Certificirani"],
     image: "/thule_nosilec.png",
-    href: "/izposoja",
+    href: "#kontakt",
     
   },
   {
@@ -27,7 +27,7 @@ const products = [
       "Kakovostni nosilci za kolo – na streho ali na vlečno kljuko. Preprost in varen transport koles.",
     features: ["1–4 kolesa", "Streha ali kljuka", "Hitra montaža"],
     image: "thule_kolo_nosilec.png",
-    href: "/izposoja",
+    href: "#kontakt",
   },
 ];
 

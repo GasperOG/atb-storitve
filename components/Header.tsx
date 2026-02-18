@@ -42,6 +42,11 @@ export default function Header() {
     }
   };
 
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <>
       <header
@@ -54,7 +59,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href="/" className="flex items-center flex-shrink-0" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
+            <Link href="/" onClick={handleLogoClick} className="flex items-center flex-shrink-0" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
               <span className={`text-2xl font-extrabold tracking-tight transition-all duration-500 ${
                 scrolled ? "text-[#1a56db]" : "text-[#1a56db]"
               } ${
@@ -75,10 +80,10 @@ export default function Header() {
                   href={item.href}
                   onClick={(e) => handleAnchorClick(e, item.href)}
                   style={{ transitionDelay: `${i * 60 + 80}ms` }}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-500 cursor-pointer ${
+                  className={`px-4 py-2 rounded-md text-base font-medium transition-all duration-200 cursor-pointer ${
                     scrolled
-                      ? "text-gray-700 hover:text-[#0c2d6b] hover:bg-blue-50"
-                      : "text-white/90 hover:text-white hover:bg-white/10"
+                      ? "text-gray-700 hover:text-[#0c2d6b] hover:bg-blue-100"
+                      : "text-white/90 hover:text-white hover:bg-white/20"
                   } ${
                     mounted ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3"
                   }`}
