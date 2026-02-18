@@ -44,7 +44,7 @@ export default function AboutSection() {
             </div>
 
             <Link
-              href="# kontakt"
+              href="#kontakt"
               className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg bg-[#1a56db] text-white font-semibold text-sm hover:bg-[#1648c8] transition-colors"
             >
               KONTAKT &amp; REZERVACIJA
