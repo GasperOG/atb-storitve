@@ -1,0 +1,11 @@
+# *
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://www.atb-storitve.si/sitemap.xml
+
+# Blocked paths
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login/

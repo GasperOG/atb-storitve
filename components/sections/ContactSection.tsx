@@ -27,7 +27,7 @@ const contactItems = [
   {
     icon: "🕐",
     label: "Delovni čas",
-    value: "Pon–Pet: dogovor",
+    value: "Pon–Pet: po dogovoru",
     href: "#kontakt",
     sub: "Po dogovoru tudi sob.",
   },

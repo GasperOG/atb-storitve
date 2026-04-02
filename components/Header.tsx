@@ -161,16 +161,8 @@ export default function Header() {
             open ? "translate-x-0 opacity-100" : "translate-x-[320px] opacity-0"
           }`}
         >
-          {/* Menu header */}
-          <div className="pt-5 pb-3 px-4 border-b border-white/20">
-            <h2 className="text-lg font-bold text-white" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
-              Meni
-            </h2>
-            <p className="text-xs text-white/60">Navigacija</p>
-          </div>
-
           {/* Navigation items */}
-          <div className="py-3 px-3 space-y-1">
+          <div className="py-4 px-3 space-y-1">
             {navItems.map((item, idx) => (
               <a
                 key={item.label}
