@@ -69,7 +69,7 @@ export default function Footer() {
                 <a href="mailto:atb.storitve@gmail.com" className="hover:text-white transition-colors">📧 atb.storitve@gmail.com</a>
               </li>
               <li>📍 Vanča vas 54, 9251 Tišina</li>
-              <li>🕐 Pon–Pet: 8:00–17:00</li>
+              <li>🕐 Pon–Pet: po dogovoru</li>
             </ul>
 
             

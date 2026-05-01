@@ -29,7 +29,7 @@ const contactItems = [
     label: "Delovni čas",
     value: "Pon–Pet: po dogovoru",
     href: "#kontakt",
-    sub: "Po dogovoru tudi sob.",
+    sub: "Po dogovoru tudi sobota",
   },
 ];
 
